@@ -1,6 +1,5 @@
 package it.unimol.gioco.app.player;
 
-import it.unimol.gioco.app.board.Cella;
 import it.unimol.gioco.app.board.CellaAssassino;
 
 import java.util.List;
@@ -8,7 +7,8 @@ import java.util.List;
 public class Assassino extends Giocatore {
     private List<CellaAssassino> obiettivi;
     private int mosseCounter;
-    public Assassino(String nome,Cella posizione, List<CellaAssassino> obiettivi) {
+
+    public Assassino(String nome,CellaAssassino posizione, List<CellaAssassino> obiettivi) {
         super(nome, posizione);
         this.obiettivi = obiettivi;
     }
@@ -28,5 +28,7 @@ public class Assassino extends Giocatore {
     public void setMosseCounter(int mosseCounter) {
         this.mosseCounter = mosseCounter;
     }
+
+
 }
 

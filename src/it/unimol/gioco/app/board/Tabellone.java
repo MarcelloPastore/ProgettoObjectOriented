@@ -1,20 +1,38 @@
 package it.unimol.gioco.app.board;
 
+import it.unimol.gioco.ui.StampaErroriUI;
 import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;
-
+import java.util.Set;
+import java.util.HashSet;
+import java.util.stream.Collectors;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * La classe Tabellone rappresenta il campo di gioco dei Giocatori
+ */
 public class Tabellone {
     private Graph<Cella, DefaultEdge> tabellone;
     private List<CellaAssassino> celleAssassino;
     private List<CellaInvestigatore> celleInvestigatore;
+    private StampaErroriUI erroreUI = new StampaErroriUI();
+
+    /**
+     * Costruttore di Tabellone, crea un grafo semplice non diretto e con archi non pesati
+     */
     public Tabellone() {
         this.tabellone = new SimpleDirectedGraph<Cella, DefaultEdge>(DefaultEdge.class);
         creagrafo();
     }
+
+    /**
+     * Il metodo crea delle liste di Celle che vengono poi inserite
+     * come vertici all'interno del grafo stesso ed infine ne vengono
+     * creati gli archi associati in modo arbitrario
+     */
     public void creagrafo() {
 
         /*Composizione CelleAssassino*/
@@ -67,14 +85,14 @@ public class Tabellone {
                 new CellaInvestigatore("SE", "AW", false),
                 new CellaInvestigatore("SE", "AX", false)
                 );
-
+        //Aggiungo le celle nei vertici
         for (CellaAssassino cella : celleAssassino) {
             tabellone.addVertex(cella);
         }
         for (CellaInvestigatore cella : celleInvestigatore) {
             tabellone.addVertex(cella);
         }
-
+        //Creo gli archi che collegano i vertici in modo arbitrario
         tabellone.addEdge(celleAssassino.get(0), celleInvestigatore.get(0));
         tabellone.addEdge(celleAssassino.get(0), celleInvestigatore.get(8));
         tabellone.addEdge(celleAssassino.get(1), celleInvestigatore.get(0));
@@ -142,25 +160,78 @@ public class Tabellone {
         tabellone.addEdge(celleAssassino.get(19), celleInvestigatore.get(18));
     }
 
-    public Cella getCellaIniziale(int x){
-        return celleAssassino.get(x);
-    }
-
-    public Cella getCellaAssassino(int i) {
+    /**
+     * Getter della cella dell'assassino con posizione fornita dall'utente
+     * @param i iesima vella da ottenere
+     * @return CellaAssassino o Null
+     */
+    public CellaAssassino getCellaAssassino(int i) {
         if (i >= 0 && i < celleAssassino.size()){
             return celleAssassino.get(i);
         }
+
         return null;
+    }
+    public int getMaxCelleAssassino() {
+        return celleAssassino.size();
     }
 
-    public Cella getCellaInvestigatore(String nome) {
-        Cella cellaNome;
+    /**
+     * Getter della Cella dell'investigatore con posizione fornita dall'utente
+     * @param nome nominativo della cella "AA" "BB"
+     * @return Cella Investigatore o Null
+     */
+    public CellaInvestigatore getCellaInvestigatore(String nome) {
+        if (nome == null) {
+            erroreUI.erroreRicercaCellaInvestigatore1();
+            return null;
+        }
         for (CellaInvestigatore cella : celleInvestigatore){
-            if(cella.getNome().equals(nome)){
-                cellaNome = cella;
-                return cellaNome;
+            String nomeCella = cella.getNumero();
+            if (nomeCella != null) {
+                 if(nomeCella.equals(nome)){
+                    return cella;
+                }
+            } else {
+                erroreUI.erroreRicercaCellaInvestigatore2();
             }
         }
+        erroreUI.erroreRicercaCellaInvestigatore3(nome);
         return null;
     }
+    /**
+     * Metodo per trovare i vicini di una cella nel grafo.
+     * @param cella la cella di cui trovare i vicini.
+     * @return un Set contenente le celle vicine.
+     */
+    public Set<Cella> findNeighbors(Cella cella) {
+        return new HashSet<>(Graphs.neighborListOf(tabellone, cella));
+    }
+
+    /**
+     * Trova le celle assassine vicine alla data cella assassino.
+     * @param cella la cella assassino di partenza
+     * @return un Set delle celle assassine vicine
+     */
+    public Set<CellaAssassino> trovaViciniCelleAssassino(CellaAssassino cella) {
+        Set<Cella> vicini = findNeighbors(cella);
+        return vicini.stream()
+                .filter(c -> c instanceof CellaAssassino)
+                .map(c -> (CellaAssassino) c)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Trova le celle investigatore vicine alla data cella investigatore.
+     * @param cella la cella investigatore di partenza
+     * @return un Set delle celle investigatore vicine
+     */
+    public Set<CellaInvestigatore> trovaViciniCelleInvestigatore(CellaInvestigatore cella) {
+        Set<Cella> vicini = findNeighbors(cella);
+        return vicini.stream()
+                .filter(c -> c instanceof CellaInvestigatore)
+                .map(c -> (CellaInvestigatore) c)
+                .collect(Collectors.toSet());
+    }
+
 }
