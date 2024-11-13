@@ -1,4 +1,4 @@
-package it.unimol.gioco.app;
+package it.unimol.gioco.app.board;
 
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
@@ -9,15 +9,16 @@ import java.util.List;
 
 public class Tabellone {
     private Graph<Cella, DefaultEdge> tabellone;
-
+    private List<CellaAssassino> celleAssassino;
+    private List<CellaInvestigatore> celleInvestigatore;
     public Tabellone() {
         this.tabellone = new SimpleDirectedGraph<Cella, DefaultEdge>(DefaultEdge.class);
         creagrafo();
     }
-    private void creagrafo() {
+    public void creagrafo() {
 
         /*Composizione CelleAssassino*/
-        List<CellaAssassino> celleAssassino = Arrays.asList(
+        celleAssassino = Arrays.asList(
                 new CellaAssassino("NW", "1", "B"),
                 new CellaAssassino("NW", "2", "B"),
                 new CellaAssassino("NW", "3", "N"),
@@ -40,7 +41,7 @@ public class Tabellone {
                 new CellaAssassino("SE", "20", "B")
             );
         /*Composizione CelleInvestigatore*/
-        List<CellaInvestigatore> celleInvestigatore = Arrays.asList(
+        celleInvestigatore = Arrays.asList(
                 new CellaInvestigatore("NW", "AA", false),
                 new CellaInvestigatore("NW", "AB", false),
                 new CellaInvestigatore("NW", "AC", false),
@@ -141,5 +142,25 @@ public class Tabellone {
         tabellone.addEdge(celleAssassino.get(19), celleInvestigatore.get(18));
     }
 
+    public Cella getCellaIniziale(int x){
+        return celleAssassino.get(x);
+    }
 
+    public Cella getCellaAssassino(int i) {
+        if (i >= 0 && i < celleAssassino.size()){
+            return celleAssassino.get(i);
+        }
+        return null;
+    }
+
+    public Cella getCellaInvestigatore(String nome) {
+        Cella cellaNome;
+        for (CellaInvestigatore cella : celleInvestigatore){
+            if(cella.getNome().equals(nome)){
+                cellaNome = cella;
+                return cellaNome;
+            }
+        }
+        return null;
+    }
 }

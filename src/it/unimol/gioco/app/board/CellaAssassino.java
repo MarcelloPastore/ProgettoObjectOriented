@@ -1,4 +1,4 @@
-package it.unimol.gioco.app;
+package it.unimol.gioco.app.board;
 
 public class CellaAssassino extends Cella{
     private String tipo;

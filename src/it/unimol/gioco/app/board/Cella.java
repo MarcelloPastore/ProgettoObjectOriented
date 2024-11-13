@@ -1,4 +1,4 @@
-package it.unimol.gioco.app;
+package it.unimol.gioco.app.board;
 
 public class Cella {
     private String quadrante;
