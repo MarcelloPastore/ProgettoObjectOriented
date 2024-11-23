@@ -12,7 +12,6 @@ public class CellaInvestigatore extends Cella {
         return startingPoint;
     }
 
-
     public String getNumero() {
         return numero;
     }
@@ -23,6 +22,6 @@ public class CellaInvestigatore extends Cella {
 
     @Override
     public String toString() {
-        return "CellaInvestigatore{nome='" + numero + "'}";
+        return "CellaInvestigatore: " + numero ;
     }
 }

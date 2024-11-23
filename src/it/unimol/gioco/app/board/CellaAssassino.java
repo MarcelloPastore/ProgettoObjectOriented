@@ -7,7 +7,6 @@ public class CellaAssassino extends Cella{
             super(quadrante, numero);
         this.tipo = tipo;
     }
-
     @Override
     public String toString() {
         return "Cella numero: " + numero ;

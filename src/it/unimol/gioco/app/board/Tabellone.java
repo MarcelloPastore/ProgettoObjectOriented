@@ -1,24 +1,20 @@
 package it.unimol.gioco.app.board;
 
-import it.unimol.gioco.ui.StampaErroriUI;
+
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.stream.Collectors;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+
 
 /**
  * La classe Tabellone rappresenta il campo di gioco dei Giocatori
  */
 public class Tabellone {
-    private Graph<Cella, DefaultEdge> tabellone;
+    private final Graph<Cella, DefaultEdge> tabellone;
     private List<CellaAssassino> celleAssassino;
     private List<CellaInvestigatore> celleInvestigatore;
-    private StampaErroriUI erroreUI = new StampaErroriUI();
 
     /**
      * Costruttore di Tabellone, crea un grafo semplice non diretto e con archi non pesati
@@ -162,16 +158,15 @@ public class Tabellone {
 
     /**
      * Getter della cella dell'assassino con posizione fornita dall'utente
-     * @param i iesima vella da ottenere
+     * @param i i-esima cella da ottenere
      * @return CellaAssassino o Null
      */
     public CellaAssassino getCellaAssassino(int i) {
         if (i >= 0 && i < celleAssassino.size()){
             return celleAssassino.get(i);
-        }
-
-        return null;
+        } else return null;
     }
+
     public int getMaxCelleAssassino() {
         return celleAssassino.size();
     }
@@ -182,56 +177,82 @@ public class Tabellone {
      * @return Cella Investigatore o Null
      */
     public CellaInvestigatore getCellaInvestigatore(String nome) {
-        if (nome == null) {
-            erroreUI.erroreRicercaCellaInvestigatore1();
-            return null;
-        }
         for (CellaInvestigatore cella : celleInvestigatore){
             String nomeCella = cella.getNumero();
-            if (nomeCella != null) {
-                 if(nomeCella.equals(nome)){
-                    return cella;
-                }
-            } else {
-                erroreUI.erroreRicercaCellaInvestigatore2();
+            if(nomeCella.equals(nome.toUpperCase())){
+                return cella;
             }
         }
-        erroreUI.erroreRicercaCellaInvestigatore3(nome);
         return null;
     }
-    /**
-     * Metodo per trovare i vicini di una cella nel grafo.
-     * @param cella la cella di cui trovare i vicini.
-     * @return un Set contenente le celle vicine.
+
+     /**
+     * Restituisce una lista di CelleAssassino immediatamente vicine alla cella data in input,
+     * dove "immediatamente vicine" significa che sono collegate attraverso una singola CellaInvestigatore.
+     *
+     * @param cellaInput la cella assassino di partenza
+     * @return List<CellaAssassino> lista delle celle assassino immediatamente vicine senza duplicati
      */
-    public Set<Cella> findNeighbors(Cella cella) {
-        return new HashSet<>(Graphs.neighborListOf(tabellone, cella));
+    public List<CellaAssassino> getCelleAssassineVicine(CellaAssassino cellaInput) {
+        if (cellaInput == null) {
+            return new ArrayList<>();
+        }
+
+        // Usiamo un Set per le celle assassino vicine per evitare duplicati
+        Set<CellaAssassino> celleVicine = new HashSet<>();
+
+        // Primo livello: trova le celle investigatore collegate
+        Set<Cella> celleInvestigatore = new HashSet<>();
+        celleInvestigatore.addAll(Graphs.successorListOf(tabellone, cellaInput));
+        celleInvestigatore.addAll(Graphs.predecessorListOf(tabellone, cellaInput));
+
+        // Per ogni cella investigatore, trova le celle assassino collegate
+        for (Cella cellaInv : celleInvestigatore) {
+            if (cellaInv instanceof CellaInvestigatore) {
+                Set<Cella> celleCollegate = new HashSet<>();
+                celleCollegate.addAll(Graphs.successorListOf(tabellone, cellaInv));
+                celleCollegate.addAll(Graphs.predecessorListOf(tabellone, cellaInv));
+
+                for (Cella cella : celleCollegate) {
+                    if (cella instanceof CellaAssassino && !cella.equals(cellaInput)) {
+                        celleVicine.add((CellaAssassino) cella);
+                    }
+                }
+            }
+        }
+        // Convertiamo il Set in List per mantenere la firma del metodo
+        return new ArrayList<>(celleVicine);
     }
 
-    /**
-     * Trova le celle assassine vicine alla data cella assassino.
-     * @param cella la cella assassino di partenza
-     * @return un Set delle celle assassine vicine
-     */
-    public Set<CellaAssassino> trovaViciniCelleAssassino(CellaAssassino cella) {
-        Set<Cella> vicini = findNeighbors(cella);
-        return vicini.stream()
-                .filter(c -> c instanceof CellaAssassino)
-                .map(c -> (CellaAssassino) c)
-                .collect(Collectors.toSet());
-    }
+    public List<CellaInvestigatore> getCelleInvestigatoriVicine(CellaInvestigatore cellaInput) {
+        if (cellaInput == null) {
+            return new ArrayList<>();
+        }
 
-    /**
-     * Trova le celle investigatore vicine alla data cella investigatore.
-     * @param cella la cella investigatore di partenza
-     * @return un Set delle celle investigatore vicine
-     */
-    public Set<CellaInvestigatore> trovaViciniCelleInvestigatore(CellaInvestigatore cella) {
-        Set<Cella> vicini = findNeighbors(cella);
-        return vicini.stream()
-                .filter(c -> c instanceof CellaInvestigatore)
-                .map(c -> (CellaInvestigatore) c)
-                .collect(Collectors.toSet());
+        // Usiamo un Set per le celle investigatore vicine per evitare duplicati
+        Set<CellaInvestigatore> celleVicine = new HashSet<>();
+
+        // Primo livello: trova le celle assassino collegate
+        Set<Cella> celleAssassino = new HashSet<>();
+        celleAssassino.addAll(Graphs.successorListOf(tabellone, cellaInput));
+        celleAssassino.addAll(Graphs.predecessorListOf(tabellone, cellaInput));
+
+        // Per ogni cella assassino, trova le celle investigatore collegate
+        for (Cella cellaAss : celleAssassino) {
+            if (cellaAss instanceof CellaAssassino) {
+                Set<Cella> celleCollegate = new HashSet<>();
+                celleCollegate.addAll(Graphs.successorListOf(tabellone, cellaAss));
+                celleCollegate.addAll(Graphs.predecessorListOf(tabellone, cellaAss));
+
+                for (Cella cella : celleCollegate) {
+                    if (cella instanceof CellaInvestigatore && !cella.equals(cellaInput)) {
+                        celleVicine.add((CellaInvestigatore) cella);
+                    }
+                }
+            }
+        }
+
+        return new ArrayList<>(celleVicine);
     }
 
 }
