@@ -5,13 +5,15 @@ import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;
+
+import java.io.Serializable;
 import java.util.*;
 
 
 /**
  * La classe Tabellone rappresenta il campo di gioco dei Giocatori
  */
-public class Tabellone {
+public class Tabellone implements Serializable {
     private final Graph<Cella, DefaultEdge> tabellone;
     private List<CellaAssassino> celleAssassino;
     private List<CellaInvestigatore> celleInvestigatore;

@@ -9,22 +9,30 @@ import it.unimol.gioco.app.exceptions.MosseMassimeRaggiunte;
 import it.unimol.gioco.app.player.Assassino;
 import it.unimol.gioco.app.player.Giocatore;
 import it.unimol.gioco.app.player.Investigatore;
+import it.unimol.gioco.app.saves.GameSaveManager;
+import it.unimol.gioco.ui.board.TabelloneUI;
+import it.unimol.gioco.ui.player.GiocatoreUI;
 
+import java.io.IOException;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
 public class GiocoUI {
     private final Tabellone tabellone;
-    private final Gioco gioco;
+    private Gioco gioco;
     private final StampaErroriUI stampaErroriUI;
     private final Scanner scanner;
+    private final GiocatoreUI giocatoreUI;
+    private final TabelloneUI tabelloneUI;
 
     public GiocoUI() {
         this.tabellone = new Tabellone();
         this.gioco = new Gioco();
         this.stampaErroriUI = new StampaErroriUI();
         this.scanner = new Scanner(System.in);
+        this.giocatoreUI = new GiocatoreUI(gioco);
+        this.tabelloneUI = new TabelloneUI(gioco);
     }
 
     public void stampaMenuPrincipale() {
@@ -38,65 +46,121 @@ public class GiocoUI {
         System.out.println("2. CARICA ");
         System.out.println("3. ESCI ");
         System.out.println("------------------------------------------------");
-        inizia(scanner.nextInt());
+        int scelta = scanner.nextInt();
+        scanner.nextLine(); // Consuma newline
+        inizia(scelta);
+    }
+
+    public void inizia(int scelta) {
+        switch (scelta) {
+            case 1:
+                gioco.inizializzaMappa();
+                scegliClasse();
+                eseguiTurni();
+                break;
+            case 2:
+                caricaPartita();
+                break;
+            case 3:
+                giocatoreUI.stampaUscita();
+                break;
+            default:
+                stampaErroriUI.erroreDiStampa1();
+        }
+    }
+
+    private void caricaPartita() {
+        try {
+            // Mostra i salvataggi disponibili
+            String[] salvataggi = GameSaveManager.getAvailableSaves();
+
+            if (salvataggi == null || salvataggi.length == 0) {
+                System.out.println("Nessun salvataggio disponibile!");
+                stampaMenuPrincipale();
+                return;
+            }
+
+            System.out.println("Salvataggi disponibili:");
+            for (int i = 0; i < salvataggi.length; i++) {
+                System.out.println((i + 1) + ". " + salvataggi[i]);
+            }
+
+            System.out.println("Scegli il salvataggio da caricare:");
+            int scelta = scanner.nextInt();
+            scanner.nextLine(); // Consuma newline
+
+            if (scelta < 1 || scelta > salvataggi.length) {
+                System.out.println("Selezione non valida!");
+                stampaMenuPrincipale();
+                return;
+            }
+
+            // Carica il gioco
+            gioco = GameSaveManager.loadGame(salvataggi[scelta - 1]);
+
+            // Continua con i turni
+            eseguiTurni();
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Errore nel caricamento: " + e.getMessage());
+            stampaMenuPrincipale();
+        }
+    }
+
+    private void salvaPartita() {
+        try {
+            System.out.println("Inserisci un nome per il salvataggio:");
+            String nomeSalvataggio = scanner.nextLine();
+
+            GameSaveManager.saveGame(gioco, nomeSalvataggio);
+            System.out.println("Partita salvata con successo!");
+        } catch (IOException e) {
+            System.out.println("Errore durante il salvataggio: " + e.getMessage());
+        }
     }
 
     public String sceltaNomeGiocatore() {
-        stampaRichiestaNomeGiocatore();
+        giocatoreUI.stampaRichiestaNomeGiocatore();
         return scanner.nextLine();
     }
+
     public int sceltaClasseGiocatore() {
-        scegliClasse1();
+        giocatoreUI.scegliClasse1();
         return scanner.nextInt();
     }
 
     public int sceltaClasseAssassino() {
-        stampaRichiestaCellaInizialeAssassino();
+        giocatoreUI.stampaRichiestaCellaInizialeAssassino();
         return scanner.nextInt();
     }
 
     public String sceltaClasseInvestigatore() {
-        stampaRichiestaCellaInizialeInvestigatore();
+        giocatoreUI.stampaRichiestaCellaInizialeInvestigatore();
         return scanner.nextLine();
     }
 
-    public int[] sceltaObiettivi(){
+    public int[] sceltaObiettivi() {
         int[] obiettivi = new int[4];
-        stampaScegliObiettivi1();
+        giocatoreUI.stampaScegliObiettivi1();
         for (int i = 0; i < obiettivi.length; i++) {
-            stampaScegliObiettivi2();
+            giocatoreUI.stampaScegliObiettivi2();
             obiettivi[i] = scanner.nextInt();
         }
         return obiettivi;
     }
 
     public int sceltaMenuAssassino(Assassino giocatore) {
-        menuAssassino(giocatore);
+        giocatoreUI.menuAssassino(giocatore);
         return scanner.nextInt();
     }
 
     public int sceltaMenuInvestigatore(Investigatore giocatore) {
-        menuInvestigatore(giocatore);
+        tabelloneUI.menuInvestigatore(giocatore);
         return scanner.nextInt();
     }
-
-//    public int movimentoAssassino(List<CellaAssassino> vicini) {
-//        stampaCelleVicine(vicini);
-//        return scanner.nextInt();
-//    }
 
     public void stampaMessaggioInizializzazione() {
         System.out.println("Inizializzazione del gioco...");
         stampaMenuPrincipale();
-    }
-
-    public void inizia(int scelta) {
-        if (scelta == 1) {
-            gioco.inizializzaMappa();
-            scegliClasse();
-            eseguiTurni();
-        }
-        else stampaUscita();
     }
 
     public void scegliClasse() {
@@ -113,8 +177,8 @@ public class GiocoUI {
                         scanner.nextLine();
                         gioco.addObiettivo(sceltaObiettivi());
                         Giocatore giocatore = gioco.inserisciAssassino(nome, numeroCella);
-                        stampaPosizione(giocatore);
-                        stampaObiettivi();
+                        giocatoreUI.stampaPosizione(giocatore);
+                        giocatoreUI.stampaObiettivi();
                     } catch (MaxAssassinException e) {
                         System.out.println("Errore: " + e.getMessage());
                     } catch (InputMismatchException e) {
@@ -124,7 +188,7 @@ public class GiocoUI {
                     String nome = sceltaNomeGiocatore();
                     String nomeCella = sceltaClasseInvestigatore();
                     Giocatore giocatore = gioco.inserisciInvestigatore(nome, nomeCella);
-                    stampaPosizione(giocatore);
+                    giocatoreUI.stampaPosizione(giocatore);
                 } else if (sceltaCella == 3) {
                     flag = false;
                 } else {
@@ -138,11 +202,11 @@ public class GiocoUI {
 
     public void eseguiTurni() {
         boolean fine = false;
-        while(!fine) {
-            List<Giocatore> giocatori= gioco.getListaGiocatori();
+        while (!fine) {
+            List<Giocatore> giocatori = gioco.getListaGiocatori();
 
             for (Giocatore giocatore : giocatori) {
-                stampaTurno();
+                giocatoreUI.stampaTurno();
                 turnoGiocatore(giocatore);
                 if (gioco.getListaObiettivi().isEmpty()) {
                     fine = true;
@@ -150,7 +214,7 @@ public class GiocoUI {
                 fine = controlloFineGioco(giocatore);
             }
         }
-        stampaFineGioco();
+        giocatoreUI.stampaFineGioco();
     }
 
     public boolean controlloFineGioco(Giocatore giocatore) {
@@ -164,21 +228,31 @@ public class GiocoUI {
         return false;
     }
 
-    private void stampaTurno() {
-        System.out.println("Turno: " + gioco.getTurnoCorrente());
-    }
-
     public void turnoGiocatore(Giocatore giocatore) {
-        if(giocatore instanceof Investigatore){
+        if (giocatore instanceof Investigatore) {
             int scelta = sceltaMenuInvestigatore((Investigatore) giocatore);
             scanner.nextLine();
-            turnoInvestigatore(scelta,(Investigatore) giocatore);
-            gioco.setTurnoCorrente();
-        } else if (giocatore instanceof Assassino){
-            stampaTurnoGiocatore(giocatore);
+
+            // Aggiungi l'opzione di salvataggio
+            if (scelta == 5) {
+                salvaPartita();
+                return;
+            }
+
+            turnoInvestigatore(scelta, (Investigatore) giocatore);
+            gioco.setTurnoCorrente(gioco.getTurnoCorrente() + 1);
+        } else if (giocatore instanceof Assassino) {
+            giocatoreUI.stampaTurnoGiocatore(giocatore);
             int scelta = sceltaMenuAssassino((Assassino) giocatore);
-            turnoAssassino(scelta,(Assassino) giocatore);
-            gioco.setTurnoCorrente();
+
+            // Aggiungi l'opzione di salvataggio
+            if (scelta == 3) {
+                salvaPartita();
+                return;
+            }
+
+            turnoAssassino(scelta, (Assassino) giocatore);
+            gioco.setTurnoCorrente(gioco.getTurnoCorrente() + 1);
         }
     }
 
@@ -190,7 +264,7 @@ public class GiocoUI {
                     throw new IllegalStateException("Non ci sono mosse disponibili!");
                 }
 
-                stampaCelleVicine(celleVicine);
+                tabelloneUI.stampaCelleVicine(celleVicine);
                 int nuovaPosizione = muoviAssassino(giocatore);
 
                 if (!celleVicine.contains(tabellone.getCellaAssassino(nuovaPosizione - 1))) {
@@ -198,12 +272,12 @@ public class GiocoUI {
                 }
 
                 gioco.muoviAssassino(giocatore, nuovaPosizione);
-                stampaPosizione(giocatore);
-                stampaStatoMosse();
+                giocatoreUI.stampaPosizione(giocatore);
+                giocatoreUI.stampaStatoMosse();
 
                 if (gioco.getListaObiettivi().contains(tabellone.getCellaAssassino(nuovaPosizione - 1))) {
                     System.out.println("🎯 Hai raggiunto un obiettivo!");
-                    stampaObiettiviRimanenti();
+                    giocatoreUI.stampaObiettiviRimanenti();
                 }
 
             } else if (scelta == 2) {
@@ -233,26 +307,17 @@ public class GiocoUI {
         }
     }
 
-    private void stampaStatoMosse() {
-        System.out.println("Mosse rimanenti: " + gioco.getMosseRimanentiAssassino());
-    }
-
-    private void stampaObiettiviRimanenti() {
-        System.out.println("Obiettivi rimanenti: " + gioco.getListaObiettivi().size());
-        stampaObiettivi();
-    }
-
     public void turnoInvestigatore(int scelta, Investigatore giocatore) {
         try {
             boolean turnoContinua = true;
             boolean mossoInQuestoTurno = false;
             boolean indizioInQuestoTurno = false;
 
-            while(turnoContinua) {
+            while (turnoContinua) {
                 if (scelta == 1 && !mossoInQuestoTurno) {
                     // Gestione movimento
                     List<CellaInvestigatore> celleVicine = tabellone.getCelleInvestigatoriVicine(giocatore.getPosizione());
-                    stampaCelleVicineInvestigatore(celleVicine);
+                    tabelloneUI.stampaCelleVicineInvestigatore(celleVicine);
 
                     String nuovaPosizione = muoviInvestigatore(giocatore);
                     CellaInvestigatore nuovaCella = tabellone.getCellaInvestigatore(nuovaPosizione);
@@ -266,7 +331,7 @@ public class GiocoUI {
 
                     giocatore.setPosizione(nuovaCella);
                     gioco.muoviInvestigatore(giocatore, nuovaPosizione);
-                    stampaPosizione(giocatore);
+                    giocatoreUI.stampaPosizione(giocatore);
                     mossoInQuestoTurno = true;
 
                 } else if (scelta == 2 && !indizioInQuestoTurno) {
@@ -312,7 +377,7 @@ public class GiocoUI {
 
                 // Se non ha ancora terminato il turno, chiedi la prossima azione
                 if (turnoContinua) {
-                    menuInvestigatoreAzioniRimanenti(mossoInQuestoTurno, indizioInQuestoTurno);
+                    giocatoreUI.menuInvestigatoreAzioniRimanenti(mossoInQuestoTurno, indizioInQuestoTurno);
                     scelta = scanner.nextInt();
                 }
             }
@@ -324,18 +389,6 @@ public class GiocoUI {
         } catch (Exception e) {
             System.out.println("Si è verificato un errore imprevisto: " + e.getMessage());
         }
-    }
-
-    public void menuInvestigatoreAzioniRimanenti(boolean mosso, boolean indizioRichiesto) {
-        System.out.println("\nAzioni disponibili:");
-        if (!mosso) {
-            System.out.println("1. Muoviti");
-        }
-        if (!indizioRichiesto) {
-            System.out.println("2. Chiedi indizio");
-        }
-        System.out.println("3. Tenta un arresto");
-        System.out.println("4. Termina il turno");
     }
 
     private Assassino trovaAssassino() {
@@ -352,7 +405,7 @@ public class GiocoUI {
         if (assassino.getPosizione().equals(tabellone.getCellaAssassino(numeroCella - 1))) {
             System.out.println("🎉 Congratulazioni! Hai arrestato l'assassino!");
             investigatore.setArresto(true);
-            stampaPercorsoAssassino();
+            giocatoreUI.stampaPercorsoAssassino();
         } else {
             System.out.println("❌ Tentativo di arresto fallito! L'assassino non si trova in questa cella.");
             System.out.println("L'assassino può continuare a muoversi...");
@@ -360,8 +413,8 @@ public class GiocoUI {
     }
 
     public int muoviAssassino(Giocatore giocatore) {
-            System.out.println("Inserisci la nuova posizione tra quelle possibili: ");
-            return scanner.nextInt();
+        System.out.println("Inserisci la nuova posizione tra quelle possibili: ");
+        return scanner.nextInt();
     }
 
     public String muoviInvestigatore(Giocatore giocatore) {
@@ -369,124 +422,4 @@ public class GiocoUI {
         return scanner.nextLine();
     }
 
-    private void stampaObiettivi() {
-        System.out.println(
-            "Obiettivi assassino: " +
-            gioco.getListaObiettivi().toString()
-        );
-    }
-
-    public void stampaPercorsoAssassino() {
-        try {
-            List<CellaAssassino> percorso = gioco.getPercorsoAssassino();
-            System.out.println("\n🗺️ Percorso dell'assassino:");
-            System.out.println("--------------------------------");
-            for (int i = 0; i < percorso.size(); i++) {
-                System.out.println((i + 1) + ". " + percorso.get(i));
-            }
-            System.out.println("--------------------------------");
-        } catch (Exception e) {
-            System.out.println("Errore nella visualizzazione del percorso: " + e.getMessage());
-        }
-    }
-
-    public void stampaPosizione(Giocatore giocatore) {
-        System.out.println(giocatore.getNome() + " è stato posizionato su " + giocatore.getPosizione());
-    }
-
-    public void stampaTurnoGiocatore(Giocatore giocatore) {
-        System.out.println("Turno di: " + giocatore.getNome());
-    }
-
-    public void stampaFineGioco() {
-        System.out.println("Il gioco è terminato!");
-    }
-
-    public void stampaRichiestaNomeGiocatore() {
-        System.out.println("Inserisci il nome del giocatore: ");
-    }
-
-    public void stampaRichiestaCellaInizialeAssassino() {
-        System.out.println("Ricordando che puoi solo scegliere le Celle Bianche per iniziare\n" +
-                "Inserisci il numero della cella Assassino da cui vuoi partire: ");
-    }
-
-    public void stampaRichiestaCellaInizialeInvestigatore() {
-        System.out.println("Ricordando che puoi solo scegliere le Celle Gialle per iniziare\n" +
-                "Inserisci il nome della Cella Investigatore da cui vuoi partire: ");
-    }
-
-    public void scegliClasse1(){
-        System.out.println("Scegli la classe: ");
-        System.out.println("1. Assassino");
-        System.out.println("2. Investigatore");
-        System.out.println("3. Esci");
-    }
-
-    public void stampaUscita() {
-        System.out.println("Grazie per aver giocato con noi! Alla prossima!");
-        System.out.println("----------------------------------------------- ");
-        System.out.println("---------------WHITEHALL MISTERY--------------- ");
-        System.out.println("----------------------------------------------- ");
-    }
-
-    public void stampaScegliObiettivi1() {
-        System.out.println("L'assassino deve scegliere 4 obiettivi in 4 quadranti diversi per iniziare!");
-    }
-
-    public void stampaScegliObiettivi2() {
-        System.out.println("Scegli il numero della cella obiettivo: ");
-    }
-
-    public void menuAssassino(Assassino giocatore) {
-        System.out.println("Tocca all'Assassino " + giocatore.getNome());
-        System.out.println("Scegli la tua azione: ");
-        System.out.println("1. Muoviti  ");
-        System.out.println("2. Arrenditi ");
-
-    }
-
-    public void menuInvestigatore(Investigatore giocatore) {
-        System.out.println("Tocca all'Investigatore " + giocatore.getNome());
-        System.out.println("Scegli la tua azione: ");
-        System.out.println("1. Muoviti ");
-        System.out.println("2. Chiedi indizio");
-        System.out.println("3. Tenta un arresto");
-        System.out.println("4. Termina il turno");
-    }
-
-    public void stampaCelleVicineInvestigatore(List<CellaInvestigatore> vicini) {
-        try {
-            System.out.println("\n📍 Posizioni disponibili per il movimento:");
-            System.out.println("--------------------------------");
-            for (CellaInvestigatore cella : vicini) {
-                System.out.println("Cella: " + cella.getNumero());
-                System.out.println("--------------------------------");
-            }
-            if (vicini.isEmpty()) {
-                System.out.println("Non ci sono celle disponibili per il movimento!");
-            }
-        } catch (Exception e) {
-            System.out.println("Errore nella visualizzazione delle celle vicine: " + e.getMessage());
-        }
-    }
-
-    public void stampaCelleVicine(List<CellaAssassino> vicini) {
-        try {
-            System.out.println("\n📍 Posizioni disponibili per il movimento:");
-            System.out.println("--------------------------------");
-            for (CellaAssassino cella : vicini) {
-                System.out.println("Cella numero: " + (cella.getNumero()));
-                if (gioco.getListaObiettivi().contains(cella)) {
-                    System.out.println("⭐ Questa è una cella obiettivo!");
-                }
-                System.out.println("--------------------------------");
-            }
-            if (vicini.isEmpty()) {
-                System.out.println("Non ci sono celle disponibili per il movimento!");
-            }
-        } catch (Exception e) {
-            System.out.println("Errore nella visualizzazione delle celle vicine: " + e.getMessage());
-        }
-    }}
-
+}

@@ -1,6 +1,8 @@
 package it.unimol.gioco.app.board;
 
-public class CellaInvestigatore extends Cella {
+import java.io.Serializable;
+
+public class CellaInvestigatore extends Cella implements Serializable {
     private Boolean startingPoint;
 
     public CellaInvestigatore(String quadrante, String numero, Boolean startingPoint) {

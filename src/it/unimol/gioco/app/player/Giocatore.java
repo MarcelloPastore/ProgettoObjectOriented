@@ -3,7 +3,9 @@ package it.unimol.gioco.app.player;
 
 import it.unimol.gioco.app.board.Cella;
 
-public abstract class Giocatore {
+import java.io.Serializable;
+
+public abstract class Giocatore implements Serializable {
     private String nome;
     protected Cella posizione;
 

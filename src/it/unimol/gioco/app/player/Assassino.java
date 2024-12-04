@@ -2,9 +2,10 @@ package it.unimol.gioco.app.player;
 
 import it.unimol.gioco.app.board.CellaAssassino;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Assassino extends Giocatore {
+public class Assassino extends Giocatore implements Serializable {
     private List<CellaAssassino> obiettivi;
     private int mosseCounter;
     protected CellaAssassino posizione;

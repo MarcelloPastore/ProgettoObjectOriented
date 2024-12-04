@@ -2,7 +2,9 @@ package it.unimol.gioco.app.player;
 
 import it.unimol.gioco.app.board.CellaInvestigatore;
 
-public class Investigatore extends Giocatore {
+import java.io.Serializable;
+
+public class Investigatore extends Giocatore implements Serializable {
     private Boolean arresto;
 
     public Investigatore(String nome, CellaInvestigatore posizione, Boolean arresto) {

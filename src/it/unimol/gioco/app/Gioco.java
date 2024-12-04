@@ -11,22 +11,27 @@ import it.unimol.gioco.app.player.Investigatore;
 import it.unimol.gioco.app.exceptions.MaxAssassinException;
 import it.unimol.gioco.app.exceptions.MosseMassimeRaggiunte;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class Gioco {
+public class Gioco implements Serializable {
     private final Tabellone tabellone;
     private final List<Giocatore> giocatori;
     private final List<CellaAssassino> obiettiviAssassino = new ArrayList<>();
     private final List<CellaAssassino> percorsoAssassino = new ArrayList<>();
     private static int turnoCorrente = 0;
     private static final int MAX_MOSSE_ASSASSINO = 15;
-    private int mosseAssassino = 0;
+    private int mosseAssassino;
 
     public Gioco() {
         this.tabellone = new Tabellone();
         this.giocatori = new ArrayList<Giocatore>();
+    }
+
+    public void setMosseAssassino(int mosse) {
+        this.mosseAssassino = mosse;
     }
 
     public int numeroGiocatori(){
@@ -89,8 +94,8 @@ public class Gioco {
         return turnoCorrente;
     }
 
-    public void setTurnoCorrente(){
-        Gioco.turnoCorrente++;
+    public void setTurnoCorrente(int turno){
+        Gioco.turnoCorrente = turno;
     }
 
     public void muoviAssassino(Assassino giocatore, int nuovaPosizione) throws MosseMassimeRaggiunte {

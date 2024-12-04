@@ -1,7 +1,9 @@
 package it.unimol.gioco.app.board;
 
-public class CellaAssassino extends Cella{
-    private String tipo;
+import java.io.Serializable;
+
+public class CellaAssassino extends Cella implements Serializable {
+    private final String tipo;
 
     public CellaAssassino(String quadrante, String numero, String tipo) {
             super(quadrante, numero);
@@ -10,5 +12,9 @@ public class CellaAssassino extends Cella{
     @Override
     public String toString() {
         return "Cella numero: " + numero ;
+    }
+
+    public String getTipo() {
+        return tipo;
     }
 }

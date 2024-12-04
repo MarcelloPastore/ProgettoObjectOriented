@@ -1,8 +1,9 @@
 package it.unimol.gioco.app.board;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
-public class Cella {
+public class Cella implements Serializable {
     protected String quadrante;
     protected String numero;
 
