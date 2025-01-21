@@ -1,6 +1,4 @@
 package it.unimol.gioco;
-
-
 import it.unimol.gioco.ui.GiocoUI;
 
 public class Main {

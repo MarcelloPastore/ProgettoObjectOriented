@@ -14,7 +14,8 @@ public class CellaAssassino extends Cella implements Serializable {
         return "Cella numero: " + numero ;
     }
 
-    public String getTipo() {
-        return tipo;
+    public Boolean getTipo() {
+        if (tipo == "B") return true;
+        else return false;
     }
 }

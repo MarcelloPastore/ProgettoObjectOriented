@@ -10,7 +10,7 @@ public class CellaInvestigatore extends Cella implements Serializable {
         this.startingPoint = startingPoint;
     }
 
-    public Boolean getStartingPoint() {
+    public Boolean isStartingPoint() {
         return startingPoint;
     }
 
@@ -25,5 +25,9 @@ public class CellaInvestigatore extends Cella implements Serializable {
     @Override
     public String toString() {
         return "CellaInvestigatore: " + numero ;
+    }
+
+    public String getStartingPoint() {
+        return startingPoint.toString();
     }
 }

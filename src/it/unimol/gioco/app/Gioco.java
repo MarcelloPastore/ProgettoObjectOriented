@@ -18,6 +18,8 @@ import java.util.List;
 
 public class Gioco implements Serializable {
     private final Tabellone tabellone;
+    private boolean partitaFinita;
+    private Giocatore vincitore;
     private final List<Giocatore> giocatori;
     private final List<CellaAssassino> obiettiviAssassino = new ArrayList<>();
     private final List<CellaAssassino> percorsoAssassino = new ArrayList<>();
@@ -95,7 +97,23 @@ public class Gioco implements Serializable {
     }
 
     public void setTurnoCorrente(int turno){
-        Gioco.turnoCorrente = turno;
+        turnoCorrente = turno;
+    }
+
+    public void nextTurn() {
+        turnoCorrente += 1;
+
+        if (turnoCorrente >= numeroGiocatori()) {
+            turnoCorrente = 0;
+        }
+    }
+
+    public boolean isPartitaFinita() {
+        return partitaFinita;
+    }
+
+    public Giocatore getVincitore() {
+        return vincitore;
     }
 
     public void muoviAssassino(Assassino giocatore, int nuovaPosizione) throws MosseMassimeRaggiunte {
@@ -159,6 +177,37 @@ public class Gioco implements Serializable {
         return percorsoAssassino.contains(cella);
     }
 
+    public boolean tentaArresto(Investigatore investigatore, CellaAssassino cellaTarget) {
+        // Verifica se la cella target è adiacente all'investigatore
+        List<CellaAssassino> celleAssassinoVicine = tabellone.getCelleAssassinoAdiacenti(investigatore.getPosizione());
+        boolean cellaAdiacente = false;
+
+        for (CellaAssassino cella : celleAssassinoVicine) {
+            if (cella.getNumero().equals(cellaTarget.getNumero())) {
+                cellaAdiacente = true;
+                break;
+            }
+        }
+
+        if (!cellaAdiacente) {
+            return false; // La cella target non è adiacente all'investigatore
+        }
+
+        // Verifica se l'assassino è nella cella target
+        for (Giocatore g : giocatori) {
+            if (g instanceof Assassino assassino) {
+                boolean arrestoRiuscito = assassino.getPosizione().equals(cellaTarget);
+                if (arrestoRiuscito) {
+                    // Impostiamo lo stato di gioco come terminato
+                    partitaFinita = true;
+                    vincitore = investigatore;
+                }
+                return arrestoRiuscito;
+            }
+        }
+        return false;
+    }
+
     public List<CellaAssassino> getCelleVicineVisibili(Assassino assassino) {
         List<CellaAssassino> celleVicine = tabellone.getCelleAssassineVicine(assassino.getPosizione());
         List<CellaAssassino> celleVisibili = new ArrayList<>();
@@ -175,6 +224,27 @@ public class Gioco implements Serializable {
             }
             if (!investigatorePresenteNelPassaggio) {
                 celleVisibili.add(cella);
+            }
+        }
+        return celleVisibili;
+    }
+
+    public List<String> getCelleVicineVisibiliString(Assassino assassino) {
+        List<CellaAssassino> celleVicine = tabellone.getCelleAssassineVicine(assassino.getPosizione());
+        List<String> celleVisibili = new ArrayList<>();
+
+        for (CellaAssassino cella : celleVicine) {
+            boolean investigatorePresenteNelPassaggio = false;
+            for (Giocatore g : giocatori) {
+                if (g instanceof Investigatore) {
+                    if (isInvestigatoreVicino(cella, ((Investigatore) g).getPosizione())) {
+                        investigatorePresenteNelPassaggio = true;
+                        break;
+                    }
+                }
+            }
+            if (!investigatorePresenteNelPassaggio) {
+                celleVisibili.add(cella.getNumero());
             }
         }
         return celleVisibili;
@@ -200,4 +270,7 @@ public class Gioco implements Serializable {
                         .anyMatch(this::isAssassinoCircondato));
     }
 
+    public Tabellone getTabellone() {
+        return tabellone;
+    }
 }

@@ -1,5 +1,6 @@
 package it.unimol.gioco.app.player;
 
+import it.unimol.gioco.app.board.CellaAssassino;
 import it.unimol.gioco.app.board.CellaInvestigatore;
 
 import java.io.Serializable;

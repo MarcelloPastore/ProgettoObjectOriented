@@ -158,6 +158,36 @@ public class Tabellone implements Serializable {
         tabellone.addEdge(celleAssassino.get(19), celleInvestigatore.get(18));
     }
 
+
+    public List<String> getNumeriStartingPoint() {
+        List<String> numeriStartingPoint = new ArrayList<>();
+        for (CellaInvestigatore cella : celleInvestigatore) {
+            if (cella.isStartingPoint()) { // Considera solo le celle che sono starting point
+                numeriStartingPoint.add(cella.getNumero()); // Aggiungi il numero (già stringa)
+            }
+        }
+        return numeriStartingPoint;
+    }
+
+    public List<String> getNumeriCelleBianche() {
+        List<String> numeriCelleBianche = new ArrayList<>();
+        for (CellaAssassino cella : celleAssassino) {
+            if (cella.getTipo()) { // Considera solo le celle che sono starting point
+                numeriCelleBianche.add(cella.getNumero()); // Aggiungi il numero (già stringa)
+            }
+        }
+        return numeriCelleBianche;
+    }
+
+    public List<CellaAssassino> getCelleBianche() {
+        List<CellaAssassino> celleBianche = new ArrayList<>();
+        for (CellaAssassino cella : celleAssassino) {
+            if (cella.getTipo()) {
+                celleBianche.add(cella);
+            }
+        }
+        return celleBianche;
+    }
     /**
      * Getter della cella dell'assassino con posizione fornita dall'utente
      * @param i i-esima cella da ottenere
@@ -226,6 +256,28 @@ public class Tabellone implements Serializable {
         return new ArrayList<>(celleVicine);
     }
 
+    public List<CellaAssassino> getCelleAssassinoAdiacenti(CellaInvestigatore cellaInvestigatore) {
+        if (cellaInvestigatore == null) {
+            return new ArrayList<>();
+        }
+
+        Set<CellaAssassino> celleAssassinoAdiacenti = new HashSet<>();
+
+        // Ottieni tutte le celle direttamente collegate (sia successori che predecessori)
+        Set<Cella> celleCollegate = new HashSet<>();
+        celleCollegate.addAll(Graphs.successorListOf(tabellone, cellaInvestigatore));
+        celleCollegate.addAll(Graphs.predecessorListOf(tabellone, cellaInvestigatore));
+
+        // Filtra solo le celle assassino
+        for (Cella cella : celleCollegate) {
+            if (cella instanceof CellaAssassino) {
+                celleAssassinoAdiacenti.add((CellaAssassino) cella);
+            }
+        }
+
+        return new ArrayList<>(celleAssassinoAdiacenti);
+    }
+
     public List<CellaInvestigatore> getCelleInvestigatoriVicine(CellaInvestigatore cellaInput) {
         if (cellaInput == null) {
             return new ArrayList<>();
@@ -256,5 +308,6 @@ public class Tabellone implements Serializable {
 
         return new ArrayList<>(celleVicine);
     }
+
 
 }
